@@ -1,0 +1,31 @@
+File ---- 5MB
+
+Block -- 1B
+
+max file size -- 1024Bytes(1 kilo bytes)
+
+*inode table
+0. blok number
+1. mode
+2. size in bytes
+3. timestamps
+
+* file table
+1.mode
+2.offset
+3.iptr
+
+* file name list
+1. name
+2. inode id
+
+file name list - inode table
+
+fd   - file table - inode table
+
+
+
+main
+  load disk
+  load inodes
+  
