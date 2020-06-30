@@ -138,7 +138,7 @@ int aOpen(char *filename, unsigned int mode)
 
   if (!inode)
   {
-    inode = create_inode(mode);
+    inode = create_inode(ARW_MODE);
     inodes[next_inode_idx++] = inode;
     add_fi(filename, inode);
   }
@@ -154,7 +154,7 @@ void aClose(int fd)
 
 void write_to_disc(int offset, char *buffer, int size)
 {
-  int fd = open("disc", O_WRONLY | O_EXCL);
+  int fd = open("disc", O_WRONLY);
   lseek(fd, offset, SEEK_SET);
   write(fd, buffer, size);
   close(fd);
@@ -175,12 +175,12 @@ void aWrite(int fd, char *buffer, int size)
 
   if (inode->mode < AW_MODE)
   {
-    perror("write: permission denied");
+    printf("write: permission denied\n");
   }
 
   if (open_file->mode < AW_MODE)
   {
-    perror("Not opened in write mode");
+    printf("Not opened in write mode\n");
   }
 
   unsigned int block_number = inode->block_number;
@@ -200,12 +200,12 @@ void aRead(int fd, char *buffer, int size)
 
   if (inode->mode == AW_MODE)
   {
-    perror("read: permission denied");
+    printf("read: permission denied\n");
   }
 
   if (open_file->mode == AW_MODE)
   {
-    perror("Not opened in read mode");
+    printf("Not opened in read mode\n");
   }
 
   unsigned int block_number = inode->block_number;
@@ -218,22 +218,37 @@ void aRead(int fd, char *buffer, int size)
   inode->last_access = time(NULL);
 }
 
+void aResetOffset(int fd)
+{
+  fd_table[fd]->offset = SEEK_SET;
+}
+
 int main(void)
 {
   fd_table[0] = NULL;
 
-  int fd = aOpen("a.txt", AW_MODE);
-  printf("%d\n", fd);
+  int fd0 = aOpen("a.txt", ARW_MODE);
+  aWrite(fd0, "file1 content", 13);
+  aWrite(fd0, "file1 content2", 13);
 
-  aWrite(fd, "hello world", 11);
+  int fd1 = aOpen("b.txt", ARW_MODE);
+  aWrite(fd1, "file2 content", 13);
+  aWrite(fd1, "file2 content2", 13);
 
-  // fd = aOpen("b.txt", AR_MODE);
-  // printf("%d\n", fd);
+  aResetOffset(fd1);
 
-  // aClose(fd);
+  char buffer[28];
+  aRead(fd1, buffer, 28);
+  aClose(fd1);
 
-  // fd = aOpen("c.txt", AW_MODE);
-  // printf("%d\n", fd);
+  printf("%s\n", buffer);
+
+  aResetOffset(fd0);
+
+  aRead(fd0, buffer, 28);
+  aClose(fd0);
+
+  printf("%s\n", buffer);
 
   return 0;
 }
