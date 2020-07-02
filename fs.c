@@ -1,127 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <fcntl.h>
 
-#define MAX_FILE_SIZE 1024
-#define MAX_FILE_BLOCKS 1024 * 5
+#include "fs.h"
+#include "disc.h"
 
-#define AR_MODE 0
-#define AW_MODE 1
-#define ARW_MODE 2
-
-unsigned int next_free_file_block = 0;
-
-typedef struct inode
+Open_File_Meta *open_file_in_sys(unsigned int mode, unsigned int offset, Metadata *metadata)
 {
-  unsigned int block_number : 23;
-  unsigned int size : 11;
-  unsigned int mode : 3;
-  time_t creation_time;
-  time_t last_access;
-  time_t last_modification;
-} Inode;
-
-Inode *inodes[MAX_FILE_BLOCKS];
-int next_inode_idx = 0;
-
-Inode *create_inode(unsigned int mode)
-{
-  Inode *inode = malloc(sizeof(Inode));
-
-  inode->block_number = next_free_file_block;
-  next_free_file_block += MAX_FILE_SIZE;
-
-  inode->size = 0;
-  inode->mode = mode;
-  inode->creation_time = time(NULL);
-  inode->last_access = time(NULL);
-  inode->last_modification = time(NULL);
-
-  return inode;
-}
-
-typedef struct file_inode
-{
-  char *filename;
-  Inode *inode;
-  struct file_inode *next;
-} File_Inode;
-
-File_Inode *first_fi = NULL;
-File_Inode *last_fi = NULL;
-
-Inode *find_inode(char *filename)
-{
-  File_Inode *p_walk = first_fi;
-
-  while (p_walk)
-  {
-    if (strcmp(p_walk->filename, filename) == 0)
-    {
-      return p_walk->inode;
-    }
-
-    p_walk = p_walk->next;
-  }
-
-  return NULL;
-}
-
-File_Inode *create_fi(char *filename, Inode *inode)
-{
-  File_Inode *fi = malloc(sizeof(File_Inode));
-
-  fi->filename = malloc(sizeof(char) * strlen(filename));
-  strcpy(fi->filename, filename);
-
-  fi->inode = inode;
-  fi->next = NULL;
-
-  return fi;
-}
-
-void add_fi(char *filename, Inode *inode)
-{
-  File_Inode *fi = create_fi(filename, inode);
-
-  if (!first_fi)
-  {
-    first_fi = fi;
-  }
-
-  if (last_fi)
-  {
-    last_fi->next = fi;
-  }
-
-  last_fi = fi;
-}
-
-typedef struct open_file
-{
-  unsigned int mode : 3;
-  unsigned int offset : 11;
-  Inode *inode;
-} Open_File;
-
-Open_File *open_file_in_sys(unsigned int mode, unsigned int offset, Inode *inode)
-{
-  Open_File *open_file = malloc(sizeof(Open_File));
+  Open_File_Meta *open_file = malloc(sizeof(Open_File_Meta));
 
   open_file->mode = mode;
   open_file->offset = offset;
-  open_file->inode = inode;
+  open_file->metadata = metadata;
 
   return open_file;
 }
 
-Open_File *fd_table[10];
+Open_File_Meta *fd_table[10];
 
-int add_to_fd_table(Open_File *open_file)
+int add_to_fd_table(Open_File_Meta *open_file)
 {
   int i = -1;
   while (fd_table[++i])
@@ -134,16 +31,16 @@ int add_to_fd_table(Open_File *open_file)
 
 int aOpen(char *filename, unsigned int mode)
 {
-  Inode *inode = find_inode(filename);
+  Metadata *metadata = find_metadata(filename);
 
-  if (!inode)
+  if (!metadata)
   {
-    inode = create_inode(ARW_MODE);
-    inodes[next_inode_idx++] = inode;
-    add_fi(filename, inode);
+    metadata = create_metadata(ARW_MODE);
+    add_metadata(metadata);
+    add_fn_md(filename, metadata);
   }
 
-  return add_to_fd_table(open_file_in_sys(mode, 0, inode));
+  return add_to_fd_table(open_file_in_sys(mode, 0, metadata));
 }
 
 void aClose(int fd)
@@ -152,28 +49,12 @@ void aClose(int fd)
   fd_table[fd] = NULL;
 }
 
-void write_to_disc(int offset, char *buffer, int size)
-{
-  int fd = open("disc", O_WRONLY);
-  lseek(fd, offset, SEEK_SET);
-  write(fd, buffer, size);
-  close(fd);
-}
-
-void read_from_disc(int offset, char *buffer, int size)
-{
-  int fd = open("disc", O_RDONLY | O_EXCL);
-  lseek(fd, offset, SEEK_SET);
-  read(fd, buffer, size);
-  close(fd);
-}
-
 void aWrite(int fd, char *buffer, int size)
 {
-  Open_File *open_file = fd_table[fd];
-  Inode *inode = open_file->inode;
+  Open_File_Meta *open_file = fd_table[fd];
+  Metadata *metadata = open_file->metadata;
 
-  if (inode->mode < AW_MODE)
+  if (metadata->mode < AW_MODE)
   {
     printf("write: permission denied\n");
   }
@@ -183,22 +64,22 @@ void aWrite(int fd, char *buffer, int size)
     printf("Not opened in write mode\n");
   }
 
-  unsigned int block_number = inode->block_number;
+  unsigned int block_number = metadata->block_number;
   unsigned int offset = open_file->offset;
 
   write_to_disc(block_number + offset, buffer, size);
 
   open_file->offset += size;
-  inode->last_modification = time(NULL);
-  inode->last_access = time(NULL);
+  metadata->last_modification = time(NULL);
+  metadata->last_access = time(NULL);
 }
 
 void aRead(int fd, char *buffer, int size)
 {
-  Open_File *open_file = fd_table[fd];
-  Inode *inode = open_file->inode;
+  Open_File_Meta *open_file = fd_table[fd];
+  Metadata *metadata = open_file->metadata;
 
-  if (inode->mode == AW_MODE)
+  if (metadata->mode == AW_MODE)
   {
     printf("read: permission denied\n");
   }
@@ -208,47 +89,17 @@ void aRead(int fd, char *buffer, int size)
     printf("Not opened in read mode\n");
   }
 
-  unsigned int block_number = inode->block_number;
+  unsigned int block_number = metadata->block_number;
   unsigned int offset = open_file->offset;
 
   read_from_disc(block_number + offset, buffer, size);
 
   open_file->offset += size;
-  inode->last_modification = time(NULL);
-  inode->last_access = time(NULL);
+  metadata->last_modification = time(NULL);
+  metadata->last_access = time(NULL);
 }
 
 void aResetOffset(int fd)
 {
   fd_table[fd]->offset = SEEK_SET;
-}
-
-int main(void)
-{
-  fd_table[0] = NULL;
-
-  int fd0 = aOpen("a.txt", ARW_MODE);
-  aWrite(fd0, "file1 content", 13);
-  aWrite(fd0, "file1 content2", 13);
-
-  int fd1 = aOpen("b.txt", ARW_MODE);
-  aWrite(fd1, "file2 content", 13);
-  aWrite(fd1, "file2 content2", 13);
-
-  aResetOffset(fd1);
-
-  char buffer[28];
-  aRead(fd1, buffer, 28);
-  aClose(fd1);
-
-  printf("%s\n", buffer);
-
-  aResetOffset(fd0);
-
-  aRead(fd0, buffer, 28);
-  aClose(fd0);
-
-  printf("%s\n", buffer);
-
-  return 0;
 }

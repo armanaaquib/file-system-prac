@@ -4,7 +4,7 @@ Block -- 1B
 
 max file size -- 1024Bytes(1 kilo bytes)
 
-*inode table
+*metadata table
 0. blok number
 1. mode
 2. size in bytes
