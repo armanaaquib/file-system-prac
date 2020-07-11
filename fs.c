@@ -3,6 +3,7 @@
 #include <fcntl.h>
 
 #include "fs.h"
+#include "metadata.h"
 #include "disc.h"
 
 Open_File_Meta *open_file_in_sys(unsigned int mode, unsigned int offset, Metadata *metadata)
@@ -67,7 +68,7 @@ void aWrite(int fd, char *buffer, int size)
   unsigned int block_number = metadata->block_numbers[metadata->no_of_blocks - 1];
   unsigned int offset = open_file->offset;
 
-  write_to_disc(block_number + offset, buffer, size);
+  write_to_disc((block_number * BLOCK_SIZE) + offset, buffer, size);
 
   open_file->offset += size;
   metadata->last_modification = time(NULL);
@@ -92,10 +93,9 @@ void aRead(int fd, char *buffer, int size)
   unsigned int block_number = metadata->block_numbers[metadata->no_of_blocks - 1];
   unsigned int offset = open_file->offset;
 
-  read_from_disc(block_number + offset, buffer, size);
+  read_from_disc((block_number * BLOCK_SIZE) + offset, buffer, size);
 
   open_file->offset += size;
-  metadata->last_modification = time(NULL);
   metadata->last_access = time(NULL);
 }
 
