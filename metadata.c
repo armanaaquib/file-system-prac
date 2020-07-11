@@ -23,12 +23,28 @@ int get_free_block_number()
   return -1;
 }
 
+unsigned *add_block_number(unsigned *block_numbers, unsigned short no_of_blocks, unsigned new_block)
+{
+  unsigned *new_block_numbers = malloc(sizeof(unsigned) * (no_of_blocks + 1));
+
+  for (size_t i = 0; i < no_of_blocks; i++)
+  {
+    new_block_numbers[i] = block_numbers[i];
+  }
+
+  new_block_numbers[no_of_blocks] = new_block;
+
+  return new_block_numbers;
+}
+
 Metadata *create_metadata(unsigned int mode)
 {
   Metadata *metadata = malloc(sizeof(Metadata));
 
-  metadata->block_number = get_free_block_number();
-  blocks_info[metadata->block_number] = 1;
+  unsigned free_block = get_free_block_number();
+  metadata->block_numbers = add_block_number(metadata->block_numbers, 0, free_block);
+  metadata->no_of_blocks = 1;
+  blocks_info[free_block] = 1;
 
   metadata->size = 0;
   metadata->mode = mode;

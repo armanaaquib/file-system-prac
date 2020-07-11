@@ -64,7 +64,7 @@ void aWrite(int fd, char *buffer, int size)
     printf("Not opened in write mode\n");
   }
 
-  unsigned int block_number = metadata->block_number;
+  unsigned int block_number = metadata->block_numbers[metadata->no_of_blocks - 1];
   unsigned int offset = open_file->offset;
 
   write_to_disc(block_number + offset, buffer, size);
@@ -89,7 +89,7 @@ void aRead(int fd, char *buffer, int size)
     printf("Not opened in read mode\n");
   }
 
-  unsigned int block_number = metadata->block_number;
+  unsigned int block_number = metadata->block_numbers[metadata->no_of_blocks - 1];
   unsigned int offset = open_file->offset;
 
   read_from_disc(block_number + offset, buffer, size);

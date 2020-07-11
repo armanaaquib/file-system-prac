@@ -8,7 +8,8 @@
 
 typedef struct metadata
 {
-  unsigned int block_number : 23;
+  unsigned int *block_numbers;
+  unsigned short int no_of_blocks;
   unsigned int size : 11;
   unsigned int mode : 3;
   time_t creation_time;
