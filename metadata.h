@@ -3,8 +3,8 @@
 #ifndef __METADATA_H_
 #define __METADATA_H_
 
-#define MAX_FILE_BLOCKS 1024 * 5
-#define MAX_FILE_SIZE 1024
+#define NO_OF_BLOCKS 1024
+#define BLOCK_SIZE 1024
 
 typedef struct metadata
 {

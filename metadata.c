@@ -6,17 +6,29 @@
 Fn_Md *first_fi = NULL;
 Fn_Md *last_fi = NULL;
 
-Metadata *all_metadata[MAX_FILE_BLOCKS];
+char blocks_info[NO_OF_BLOCKS];
+Metadata *all_metadata[NO_OF_BLOCKS];
 int next_metadata_idx = 0;
 
-unsigned int next_free_file_block = 0;
+int get_free_block_number()
+{
+  for (size_t i = 0; i <= NO_OF_BLOCKS; i++)
+  {
+    if (blocks_info[i] != 1)
+    {
+      return i;
+    }
+  }
+
+  return -1;
+}
 
 Metadata *create_metadata(unsigned int mode)
 {
   Metadata *metadata = malloc(sizeof(Metadata));
 
-  metadata->block_number = next_free_file_block;
-  next_free_file_block += MAX_FILE_SIZE;
+  metadata->block_number = get_free_block_number();
+  blocks_info[metadata->block_number] = 1;
 
   metadata->size = 0;
   metadata->mode = mode;
