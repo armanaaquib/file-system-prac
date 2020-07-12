@@ -58,19 +58,31 @@ void aWrite(int fd, char *buffer, int size)
   if (metadata->mode < AW_MODE)
   {
     printf("write: permission denied\n");
+    return;
   }
 
   if (open_file->mode < AW_MODE)
   {
     printf("Not opened in write mode\n");
+    return;
   }
 
-  unsigned int block_number = metadata->block_numbers[metadata->no_of_blocks - 1];
   unsigned int offset = open_file->offset;
+
+  unsigned int temp = offset;
+  int i = 0;
+  while (temp > BLOCK_SIZE)
+  {
+    temp -= BLOCK_SIZE;
+    i++;
+  }
+
+  unsigned int block_number = metadata->block_numbers[i];
 
   write_to_disc((block_number * BLOCK_SIZE) + offset, buffer, size);
 
   open_file->offset += size;
+  metadata->size += size;
   metadata->last_modification = time(NULL);
   metadata->last_access = time(NULL);
 }
@@ -83,15 +95,31 @@ void aRead(int fd, char *buffer, int size)
   if (metadata->mode == AW_MODE)
   {
     printf("read: permission denied\n");
+    return;
   }
 
   if (open_file->mode == AW_MODE)
   {
     printf("Not opened in read mode\n");
+    return;
   }
 
-  unsigned int block_number = metadata->block_numbers[metadata->no_of_blocks - 1];
   unsigned int offset = open_file->offset;
+
+  if ((offset + size) > metadata->size)
+  {
+    size -= ((offset + size) - metadata->size);
+  }
+
+  unsigned int temp = offset;
+  int i = 0;
+  while (temp > BLOCK_SIZE)
+  {
+    temp -= BLOCK_SIZE;
+    i++;
+  }
+
+  unsigned int block_number = metadata->block_numbers[i];
 
   read_from_disc((block_number * BLOCK_SIZE) + offset, buffer, size);
 
