@@ -23,6 +23,14 @@ int get_free_block_number()
   return -1;
 }
 
+void free_blocks(unsigned *block_numbers, unsigned short no_fo_blocks)
+{
+  for (size_t i = 0; i < no_fo_blocks; i++)
+  {
+    blocks_info[block_numbers[i]] = 0;
+  }
+}
+
 unsigned *add_block_number(unsigned *block_numbers, unsigned short no_of_blocks, unsigned new_block)
 {
   unsigned *new_block_numbers = malloc(sizeof(unsigned) * (no_of_blocks + 1));

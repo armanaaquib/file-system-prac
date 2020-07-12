@@ -41,6 +41,13 @@ int aOpen(char *filename, unsigned int mode)
     add_fn_md(filename, metadata);
   }
 
+  if (mode == AW_MODE)
+  {
+    free_blocks(metadata->block_numbers, metadata->no_of_blocks);
+    metadata->no_of_blocks = 0;
+    metadata->size = 0;
+  }
+
   return add_to_fd_table(open_file_in_sys(mode, 0, metadata));
 }
 
@@ -53,6 +60,13 @@ void aClose(int fd)
 void aWrite(int fd, char *buffer, int size)
 {
   Open_File_Meta *open_file = fd_table[fd];
+
+  if (!open_file)
+  {
+    printf("Invalid fd");
+    return;
+  }
+
   Metadata *metadata = open_file->metadata;
 
   if (metadata->mode < AW_MODE)
@@ -90,6 +104,13 @@ void aWrite(int fd, char *buffer, int size)
 void aRead(int fd, char *buffer, int size)
 {
   Open_File_Meta *open_file = fd_table[fd];
+
+  if (!open_file)
+  {
+    printf("Invalid fd");
+    return;
+  }
+
   Metadata *metadata = open_file->metadata;
 
   if (metadata->mode == AW_MODE)

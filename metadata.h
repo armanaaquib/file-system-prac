@@ -29,5 +29,6 @@ void add_metadata(Metadata *metadata);
 Metadata *find_metadata(char *filename);
 Fn_Md *create_fn_md(char *filename, Metadata *metadata);
 void add_fn_md(char *filename, Metadata *metadata);
+void free_blocks(unsigned *block_numbers, unsigned short no_fo_blocks);
 
 #endif

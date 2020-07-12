@@ -6,24 +6,33 @@ int main(void)
 {
   int fd0 = aOpen("a.txt", ARW_MODE);
   aWrite(fd0, "file1 content\n", 14);
-  aWrite(fd0, "file1 content2", 13);
+  aWrite(fd0, "file1 content2", 14);
 
   int fd1 = aOpen("b.txt", ARW_MODE);
   aWrite(fd1, "file2 content", 13);
-  aWrite(fd1, "file2 content2", 13);
-
-  aResetOffset(fd1);
+  aWrite(fd1, "file2 content2", 14);
 
   char *buffer = malloc(50);
 
+  aResetOffset(fd1);
   aRead(fd1, buffer, 28);
-  aClose(fd1);
   printf("%s\n", buffer);
+  aClose(fd1);
 
   aResetOffset(fd0);
   aRead(fd0, buffer, 28);
-  aClose(fd0);
   printf("%s\n", buffer);
+  aClose(fd0);
+
+  fd0 = aOpen("a.txt", AW_MODE);
+  aWrite(fd0, "over written content", 20);
+  aClose(fd0);
+
+  fd0 = aOpen("a.txt", AR_MODE);
+  char *buff = malloc(50);
+  aRead(fd0, buff, 28);
+  printf("%s\n", buff);
+  aClose(fd0);
 
   int fd2 = aOpen("c.txt", AW_MODE);
   aWrite(fd2, "Hello World!", 12);
