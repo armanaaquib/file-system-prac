@@ -45,6 +45,11 @@ unsigned *add_block_number(unsigned *block_numbers, unsigned short no_of_blocks,
   return new_block_numbers;
 }
 
+void assing_block(unsigned block_number)
+{
+  blocks_info[block_number] = 1;
+}
+
 Metadata *create_metadata(unsigned int mode)
 {
   Metadata *metadata = malloc(sizeof(Metadata));
@@ -52,7 +57,7 @@ Metadata *create_metadata(unsigned int mode)
   unsigned free_block = get_free_block_number();
   metadata->block_numbers = add_block_number(metadata->block_numbers, 0, free_block);
   metadata->no_of_blocks = 1;
-  blocks_info[free_block] = 1;
+  assing_block(free_block);
 
   metadata->size = 0;
   metadata->mode = mode;

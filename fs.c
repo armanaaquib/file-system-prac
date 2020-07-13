@@ -1,10 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "fs.h"
 #include "metadata.h"
 #include "disc.h"
+
+char *get_buffer(int start, int size, char *buffer)
+{
+  char *buff = malloc(size);
+  for (size_t i = start; i < start + size; i++)
+  {
+    buff[i - start] = buffer[i];
+  }
+
+  return buff;
+}
 
 Open_File_Meta *open_file_in_sys(unsigned int mode, unsigned int offset, Metadata *metadata)
 {
@@ -92,11 +104,33 @@ void aWrite(int fd, char *buffer, int size)
   }
 
   unsigned int block_number = metadata->block_numbers[i];
+  int t_size = size;
+  int buffer_s = 0;
 
-  write_to_disc((block_number * BLOCK_SIZE) + t_offset, buffer, size);
+  while ((t_offset + t_size) > BLOCK_SIZE)
+  {
+    int w_size = BLOCK_SIZE - t_offset;
+    char *buff = get_buffer(buffer_s, w_size, buffer);
+    write_to_disc((block_number * BLOCK_SIZE) + t_offset, buff, w_size);
 
-  open_file->offset += size;
-  metadata->size += size;
+    block_number = get_free_block_number();
+    metadata->block_numbers = add_block_number(metadata->block_numbers, metadata->no_of_blocks, block_number);
+    assing_block(block_number);
+    metadata->no_of_blocks++;
+
+    open_file->offset += w_size;
+    metadata->size += w_size;
+
+    t_size -= w_size;
+    buffer_s += w_size;
+    t_offset = 0;
+  }
+
+  char *buff = get_buffer(buffer_s, t_size, buffer);
+  write_to_disc((block_number * BLOCK_SIZE) + t_offset, buff, t_size);
+  open_file->offset += t_size;
+  metadata->size += t_size;
+
   metadata->last_modification = time(NULL);
   metadata->last_access = time(NULL);
 }
