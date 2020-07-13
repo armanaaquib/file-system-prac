@@ -25,7 +25,7 @@ int get_free_block_number()
 
 void free_blocks(unsigned *block_numbers, unsigned short no_fo_blocks)
 {
-  for (size_t i = 0; i < no_fo_blocks; i++)
+  for (size_t i = 1; i < no_fo_blocks; i++)
   {
     blocks_info[block_numbers[i]] = 0;
   }

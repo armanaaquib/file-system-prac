@@ -44,7 +44,7 @@ int aOpen(char *filename, unsigned int mode)
   if (mode == AW_MODE)
   {
     free_blocks(metadata->block_numbers, metadata->no_of_blocks);
-    metadata->no_of_blocks = 0;
+    metadata->no_of_blocks = 1;
     metadata->size = 0;
   }
 
@@ -83,17 +83,17 @@ void aWrite(int fd, char *buffer, int size)
 
   unsigned int offset = open_file->offset;
 
-  unsigned int temp = offset;
+  unsigned int t_offset = offset;
   int i = 0;
-  while (temp > BLOCK_SIZE)
+  while (t_offset > BLOCK_SIZE)
   {
-    temp -= BLOCK_SIZE;
+    t_offset -= BLOCK_SIZE;
     i++;
   }
 
   unsigned int block_number = metadata->block_numbers[i];
 
-  write_to_disc((block_number * BLOCK_SIZE) + offset, buffer, size);
+  write_to_disc((block_number * BLOCK_SIZE) + t_offset, buffer, size);
 
   open_file->offset += size;
   metadata->size += size;
@@ -132,17 +132,17 @@ void aRead(int fd, char *buffer, int size)
     size -= ((offset + size) - metadata->size);
   }
 
-  unsigned int temp = offset;
+  unsigned int t_offset = offset;
   int i = 0;
-  while (temp > BLOCK_SIZE)
+  while (t_offset > BLOCK_SIZE)
   {
-    temp -= BLOCK_SIZE;
+    t_offset -= BLOCK_SIZE;
     i++;
   }
 
   unsigned int block_number = metadata->block_numbers[i];
 
-  read_from_disc((block_number * BLOCK_SIZE) + offset, buffer, size);
+  read_from_disc((block_number * BLOCK_SIZE) + t_offset, buffer, size);
 
   open_file->offset += size;
   metadata->last_access = time(NULL);
