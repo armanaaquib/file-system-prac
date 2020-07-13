@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "metadata.h"
+#include "disc.h"
 
 Fn_Md *first_fi = NULL;
 Fn_Md *last_fi = NULL;
@@ -25,8 +26,10 @@ int get_free_block_number()
 
 void free_blocks(unsigned *block_numbers, unsigned short no_fo_blocks)
 {
+  write_to_disc((BLOCK_SIZE * block_numbers[0]), calloc(BLOCK_SIZE, 1), BLOCK_SIZE);
   for (size_t i = 1; i < no_fo_blocks; i++)
   {
+    write_to_disc((BLOCK_SIZE * block_numbers[i]), calloc(BLOCK_SIZE, 1), BLOCK_SIZE);
     blocks_info[block_numbers[i]] = 0;
   }
 }

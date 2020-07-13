@@ -18,6 +18,14 @@ char *get_buffer(int start, int size, char *buffer)
   return buff;
 }
 
+void add_buffer(char *buffer, int start, int size, char *buff)
+{
+  for (size_t i = start; i < start + size; i++)
+  {
+    buffer[i] = buff[i - start];
+  }
+}
+
 Open_File_Meta *open_file_in_sys(unsigned int mode, unsigned int offset, Metadata *metadata)
 {
   Open_File_Meta *open_file = malloc(sizeof(Open_File_Meta));
@@ -174,11 +182,33 @@ void aRead(int fd, char *buffer, int size)
     i++;
   }
 
-  unsigned int block_number = metadata->block_numbers[i];
+  unsigned int block_number = metadata->block_numbers[i++];
+  int t_size = size;
+  int buffer_s = 0;
 
-  read_from_disc((block_number * BLOCK_SIZE) + t_offset, buffer, size);
+  while ((t_offset + t_size) > BLOCK_SIZE)
+  {
+    int r_size = BLOCK_SIZE - t_offset;
 
-  open_file->offset += size;
+    char *buff = calloc(r_size, 1);
+    read_from_disc((block_number * BLOCK_SIZE) + t_offset, buff, r_size);
+    add_buffer(buffer, buffer_s, r_size, buff);
+
+    open_file->offset += r_size;
+
+    block_number = metadata->block_numbers[i++];
+    t_size -= r_size;
+    buffer_s += r_size;
+    t_offset = 0;
+  }
+
+  char *buff = calloc(t_size, 1);
+  read_from_disc((block_number * BLOCK_SIZE) + t_offset, buff, t_size);
+
+  add_buffer(buffer, buffer_s, t_size, buff);
+
+  open_file->offset += t_size;
+
   metadata->last_access = time(NULL);
 }
 

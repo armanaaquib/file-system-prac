@@ -10,12 +10,11 @@ int main(void)
 
   int fd1 = aOpen("b.txt", ARW_MODE);
   aWrite(fd1, "file2 content", 13);
-  aWrite(fd1, "file2 content2", 14);
 
-  char *buffer = calloc(50, 1);
+  char *buffer = calloc(3500, 1);
 
   aResetOffset(fd1);
-  aRead(fd1, buffer, 28);
+  aRead(fd1, buffer, 13);
   printf("%s\n", buffer);
   aClose(fd1);
 
@@ -28,11 +27,9 @@ int main(void)
   aWrite(fd0, "over written content", 20);
   aClose(fd0);
 
-  fd0 = aOpen("a.txt", AR_MODE);
-  char *buff = calloc(50, 1);
-  aRead(fd0, buff, 2008);
-  printf("%s\n", buff);
-  aClose(fd0);
+  fd1 = aOpen("b.txt", ARW_MODE);
+  aWrite(fd1, "Since macOS High Sierra, all devices with flash storage are automatically converted to APFS.[25] FileVault volumes are also converted. As of macOS Mojave, Fusion Drives and hard disk drives are also upgraded on installation.[26] The primary user interface to upgrade does not present an option to opt out of this conversion, and devices formatted with the High Sierra version of APFS will not be readable in previous versions of macOS.[25] Users can disable APFS conversion by using the installer's startosinstall utility on the command line and passing --converttoapfs NO. An experimental version of APFS, with some limitations, is available in macOS Sierra through the command line diskutil utility. Among these limitations, it does not perform Unicode normalization while HFS+ does,[28] leading to problems with languages other than English.[29] Drives formatted with Sierra’s version of APFS may also not be compatible with future versions of macOS or the final version of APFS, and the Sierra version of APFS cannot be used with Time Machine, FileVault volumes, or Fusion Drives.", 1084);
+  aWrite(fd1, "file2 content2", 14);
 
   int fd2 = aOpen("c.txt", AW_MODE);
   aWrite(fd2, "Hello World!", 12);
@@ -42,17 +39,13 @@ int main(void)
   fd1 = aOpen("b.txt", AR_MODE);
   fd2 = aOpen("c.txt", AR_MODE);
 
-  char *buff1 = calloc(50, 1);
-  aRead(fd0, buff1, 2008);
+  char *buff1 = calloc(3500, 1);
+  aRead(fd0, buff1, 3184);
   printf("%s\n", buff1);
 
-  char *buff2 = calloc(50, 1);
-  aRead(fd1, buff2, 20);
+  char *buff2 = calloc(1500, 1);
+  aRead(fd1, buff2, 1111);
   printf("%s\n", buff2);
-
-  char *buff3 = calloc(50, 1);
-  aRead(fd1, buff3, 8);
-  printf("%s\n", buff3);
 
   char *buff4 = calloc(50, 1);
   aRead(fd2, buff4, 12);
